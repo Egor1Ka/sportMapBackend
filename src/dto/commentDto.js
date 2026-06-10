@@ -1,17 +1,26 @@
-const toCommentDto = (doc, author = null) => ({
-  id: doc._id.toString(),
-  body: doc.body,
-  targetType: doc.targetType,
-  targetId: doc.targetId.toString(),
-  author: author
-    ? {
-        id: author._id.toString(),
-        name: author.name,
-        avatar: author.avatar || null,
-      }
-    : { id: doc.authorId.toString(), name: null, avatar: null },
-  createdAt: doc.createdAt,
-  updatedAt: doc.updatedAt,
-});
+const isPopulatedAuthor = (value) =>
+  value && typeof value === 'object' && '_id' in value;
 
-export { toCommentDto };
+const toAuthorDTO = (author) => {
+  if (!isPopulatedAuthor(author)) {
+    return { id: null, name: null, avatar: null };
+  }
+  return {
+    id: author._id.toString(),
+    name: author.name ?? null,
+    avatar: author.avatar ?? null,
+  };
+};
+
+export function toDTO(doc) {
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    targetType: doc.targetType,
+    targetId: doc.targetId?.toString?.() ?? null,
+    text: doc.text,
+    author: toAuthorDTO(doc.author),
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : null,
+    updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : null,
+  };
+}

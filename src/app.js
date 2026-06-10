@@ -1,28 +1,43 @@
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import { connectDB } from "./db.js";
-import routes from "./routes/routes.js";
-import { initBot } from "./providers/telegramProvider.js";
-
-const { PORT, FRONTEND_URL } = process.env;
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { connectDB } from './db.js';
+import passport from './config/passport.js';
+import routes from './routes/routes.js';
+import * as creemWebhookController from './controllers/creemWebhookController.js';
 
 const app = express();
 
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL ?? true,
+    credentials: true,
+  })
+);
 
-const apiPrefix = process.env.API_PREFIX ? `/${process.env.API_PREFIX}` : "";
+const apiPrefix = (process.env.API_PREFIX ?? '').replace(/\/$/, '');
+const webhookPath = apiPrefix ? `${apiPrefix}/webhooks/creem` : '/webhooks/creem';
+app.use(webhookPath, express.raw({ type: 'application/json' }), creemWebhookController.postCreemWebhook);
 
-app.use(`${apiPrefix}/billing/webhook`, express.raw({ type: "application/json" }));
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
-connectDB();
+app.use(routes);
 
-app.use(apiPrefix || "/", routes);
+const port = Number(process.env.PORT ?? 3001);
 
-app.set("trust proxy", true);
+async function start() {
+  await connectDB();
+  app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+}
 
-initBot();
+const handleStartError = (err) => {
+  console.error('Failed to start:', err);
+  process.exit(1);
+};
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+start().catch(handleStartError);

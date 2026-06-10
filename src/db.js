@@ -1,14 +1,13 @@
-import mongoose from "mongoose";
-import Invitee from "./models/Invitee.js";
+import mongoose from 'mongoose';
 
-const { DB_URL } = process.env;
-
-export const connectDB = async () => {
-  try {
-    await mongoose.connect(DB_URL);
-    console.log("Connected to DB");
-  } catch (err) {
-    console.error("Failed to connect to DB", err);
-    process.exit(1);
+/**
+ * Connect to MongoDB. Uses process.env.DB_URL.
+ * @returns {Promise<void>}
+ */
+export async function connectDB() {
+  const url = process.env.DB_URL;
+  if (!url) {
+    throw new Error('DB_URL is required');
   }
-};
+  await mongoose.connect(url);
+}

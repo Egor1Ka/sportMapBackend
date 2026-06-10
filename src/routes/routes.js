@@ -1,52 +1,37 @@
-import express from "express";
-import { httpResponse } from "../shared/utils/http/httpResponse.js";
-import { generalStatus } from "../shared/utils/http/httpStatus.js";
-import { userRouter } from "../modules/user/index.js";
-import { authRouter } from "../modules/auth/index.js";
-import { billingRouter } from "../modules/billing/index.js";
-import taskRoutes from "./subroutes/taskRoutes.js";
-import staffRoutes from "./subroutes/staffRoutes.js";
-import eventTypeRoutes from "./subroutes/eventTypeRoutes.js";
-import scheduleRoutes from "./subroutes/scheduleRoutes.js";
-import slotRoutes from "./subroutes/slotRoutes.js";
-import bookingRoutes from "./subroutes/bookingRoutes.js";
-import orgRoutes from "./subroutes/orgRoutes.js";
-import positionRoutes from "./subroutes/positionRoutes.js";
-import userSearchRoutes from "./subroutes/userSearchRoutes.js";
-import bookingFieldRoutes, { handleGetMergedForm } from "./subroutes/bookingFieldRoutes.js";
-import bookingStatusRoutes from "./subroutes/bookingStatusRoutes.js";
-import statsRoutes from "./subroutes/statsRoutes.js";
-import ratingRoutes from "./subroutes/ratingRoutes.js";
+import { Router } from "express";
+import authRoutes from "./subroutes/authRoutes.js";
+import sessionRoutes from "./subroutes/sessionRoutes.js";
+import billingRoutes from "./subroutes/billingRoutes.js";
+import subscriptionRoutes from "./subroutes/subscriptionRoutes.js";
+import sportRoutes from "./subroutes/sportRoutes.js";
+import playgroundRoutes from "./subroutes/playgroundRoutes.js";
 import commentRoutes from "./subroutes/commentRoutes.js";
+import ratingRoutes from "./subroutes/ratingRoutes.js";
+import eventRoutes from "./subroutes/eventRoutes.js";
+import userRoutes from "./subroutes/userRoutes.js";
+import adminPlaygroundEditRequestRoutes from "./subroutes/adminPlaygroundEditRequestRoutes.js";
 
-const healthCheck = (_req, res) => {
-  httpResponse(res, generalStatus.SUCCESS, { message: "API is running" });
-};
+const prefix = process.env.API_PREFIX ?? "";
+const router = Router();
 
-const router = express.Router();
-
-router.get("/", healthCheck);
-
-router.use("/user", userRouter);
-router.use("/auth", authRouter);
-router.use("/billing", billingRouter);
-
-router.use("/tasks", taskRoutes);
-
-router.use("/staff", staffRoutes);
-router.use("/event-types", eventTypeRoutes);
-router.use("/schedule", scheduleRoutes);
-router.use("/slots", slotRoutes);
-router.use("/bookings", bookingRoutes);
-router.use("/booking-statuses", bookingStatusRoutes);
-router.use("/stats", statsRoutes);
-router.use("/org", orgRoutes);
-router.use("/positions", positionRoutes);
-router.use("/users", userSearchRoutes);
-router.use("/booking-fields", bookingFieldRoutes);
-router.get("/booking-form/:eventTypeId", handleGetMergedForm);
-
-router.use("/ratings", ratingRoutes);
+router.use("/auth", authRoutes);
+router.use("/sessions", sessionRoutes);
+router.use("/billing", billingRoutes);
+router.use("/subscriptions", subscriptionRoutes);
+router.use("/sports", sportRoutes);
+router.use("/playgrounds", playgroundRoutes);
 router.use("/comments", commentRoutes);
+router.use("/ratings", ratingRoutes);
+router.use("/events", eventRoutes);
+router.use("/user", userRoutes);
+router.use("/admin/playground-edit-requests", adminPlaygroundEditRequestRoutes);
 
-export default router;
+const appRouter = prefix
+  ? (() => {
+      const main = Router();
+      main.use(prefix, router);
+      return main;
+    })()
+  : router;
+
+export default appRouter;

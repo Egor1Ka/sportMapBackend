@@ -1,43 +1,38 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const { Schema, model } = mongoose;
+export const RATING_TARGET_TYPES = ['playground'];
 
-const TARGET_TYPES = ["EventType", "User", "Membership"];
-
-const RatingSchema = new Schema(
+const ratingSchema = new mongoose.Schema(
   {
-    /** Автор оценки. Всегда User. */
-    authorId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-
-    /** Тип сущности, на которую поставлена оценка. */
-    targetType: { type: String, enum: TARGET_TYPES, required: true },
-
-    /** ObjectId сущности (без ref — полиморфно). */
-    targetId: { type: Schema.Types.ObjectId, required: true },
-
-    /** Оценка 1..5, целое. */
+    targetType: {
+      type: String,
+      enum: RATING_TARGET_TYPES,
+      required: true,
+    },
+    targetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     value: {
       type: Number,
       required: true,
       min: 1,
       max: 5,
       validate: {
-        validator: Number.isInteger,
-        message: "value must be integer 1-5",
+        validator: (v) => Number.isInteger(v),
+        message: 'value must be an integer between 1 and 5',
       },
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-// Один рейтинг от юзера на сущность.
-RatingSchema.index(
-  { authorId: 1, targetType: 1, targetId: 1 },
-  { unique: true },
-);
+ratingSchema.index({ targetType: 1, targetId: 1, user: 1 }, { unique: true });
+ratingSchema.index({ targetType: 1, targetId: 1 });
 
-// Для агрегаций avg/count.
-RatingSchema.index({ targetType: 1, targetId: 1 });
-
-export { TARGET_TYPES };
-export default model("Rating", RatingSchema);
+export const Rating = mongoose.model('Rating', ratingSchema);

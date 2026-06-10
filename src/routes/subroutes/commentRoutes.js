@@ -1,17 +1,11 @@
-import express from "express";
-import { authMiddleware } from "../../modules/auth/index.js";
-import {
-  handleListComments,
-  handleCreateComment,
-  handleUpdateComment,
-  handleDeleteComment,
-} from "../../controllers/commentController.js";
+import { Router } from 'express';
+import * as commentController from '../../controllers/commentController.js';
+import { requireAuth } from '../../middleware/auth.js';
 
-const router = express.Router();
+const router = Router();
 
-router.get("/:targetType/:targetId", handleListComments);
-router.post("/:targetType/:targetId", authMiddleware, handleCreateComment);
-router.patch("/:id", authMiddleware, handleUpdateComment);
-router.delete("/:id", authMiddleware, handleDeleteComment);
+router.get('/', commentController.list);
+router.post('/', requireAuth, commentController.create);
+router.delete('/:id', requireAuth, commentController.remove);
 
 export default router;

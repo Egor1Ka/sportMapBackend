@@ -1,26 +1,35 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const { Schema, model } = mongoose;
+export const COMMENT_TARGET_TYPES = ['playground'];
 
-const TARGET_TYPES = ["EventType", "User", "Membership"];
-
-const CommentSchema = new Schema(
+const commentSchema = new mongoose.Schema(
   {
-    authorId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    targetType: { type: String, enum: TARGET_TYPES, required: true },
-    targetId: { type: Schema.Types.ObjectId, required: true },
-    body: {
+    targetType: {
+      type: String,
+      enum: COMMENT_TARGET_TYPES,
+      required: true,
+    },
+    targetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    text: {
       type: String,
       required: true,
+      trim: true,
       minlength: 1,
-      maxlength: 1000,
+      maxlength: 2000,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-CommentSchema.index({ targetType: 1, targetId: 1, createdAt: -1 });
-CommentSchema.index({ authorId: 1 });
+commentSchema.index({ targetType: 1, targetId: 1, createdAt: -1 });
+commentSchema.index({ author: 1, createdAt: -1 });
 
-export { TARGET_TYPES };
-export default model("Comment", CommentSchema);
+export const Comment = mongoose.model('Comment', commentSchema);
