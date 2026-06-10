@@ -6,7 +6,9 @@
 services:
   api:
     image: ghcr.io/egor1ka/sportmapbackend:latest
-    env_file: .env.api
+    env_file:
+      - path: .env.api
+        required: false
     ports:
       - '9001:9000'
     restart: unless-stopped
