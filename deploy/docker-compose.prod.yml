@@ -1,0 +1,24 @@
+# sportMap production stack — lives on the VPS at /opt/sportmap/docker-compose.prod.yml
+# Runs the backend (api) and frontend (web) in one isolated compose project.
+# Access by IP for now:  web → http://<VPS_IP>:3001 , api → http://<VPS_IP>:9001
+# MongoDB is external (Atlas) — its connection string is in .env.api (DB_URL).
+
+services:
+  api:
+    image: ghcr.io/egor1ka/sportmapbackend:latest
+    env_file: .env.api
+    ports:
+      - '9001:9000'
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/egor1ka/sportmapfront:latest
+    environment:
+      - NODE_ENV=production
+      # web reaches api over the internal compose network by service name
+      - BACKEND_URL=http://api:9000
+    ports:
+      - '3001:3000'
+    depends_on:
+      - api
+    restart: unless-stopped

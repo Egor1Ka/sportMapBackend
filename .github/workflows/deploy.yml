@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: ghcr.io/egor1ka/slotx-backend
+  IMAGE_NAME: ghcr.io/egor1ka/sportmapbackend
 
 jobs:
   build-and-push:
@@ -44,6 +44,7 @@ jobs:
       - name: Sync .env.api on server
         uses: appleboy/ssh-action@v1
         env:
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           DB_URL: ${{ secrets.DB_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
@@ -62,18 +63,18 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: DB_URL,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,CREEM_API_KEY,CREEM_WEBHOOK_SECRET,CREEM_PRODUCT_PRO,CREEM_PRODUCT_ORG_CREATOR,CREEM_PRODUCT_EXPORT_PACK,TELEGRAM_BOT_TOKEN,TELEGRAM_BOT_USERNAME,CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET
+          envs: FRONTEND_URL,DB_URL,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,CREEM_API_KEY,CREEM_WEBHOOK_SECRET,CREEM_PRODUCT_PRO,CREEM_PRODUCT_ORG_CREATOR,CREEM_PRODUCT_EXPORT_PACK,TELEGRAM_BOT_TOKEN,TELEGRAM_BOT_USERNAME,CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET
           script: |
-            mkdir -p /opt/slotix
-            cat > /opt/slotix/.env.api <<EOF
+            mkdir -p /opt/sportmap
+            cat > /opt/sportmap/.env.api <<EOF
             PORT=9000
             API_PREFIX=api
-            FRONTEND_URL=https://slotixs.uk
-            COOKIE_DOMAIN=slotixs.uk
+            FRONTEND_URL=$FRONTEND_URL
+            COOKIE_DOMAIN=
             JWT_ACCESS_EXPIRES=30d
             JWT_REFRESH_EXPIRES=90d
             CREEM_TEST_MODE=true
-            GOOGLE_REDIRECT_URI=https://slotixs.uk/api/auth/google/callback
+            GOOGLE_REDIRECT_URI=$FRONTEND_URL/api/auth/google/callback
             DB_URL=$DB_URL
             JWT_SECRET=$JWT_SECRET
             GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
@@ -89,7 +90,7 @@ jobs:
             CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
             CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
             EOF
-            chmod 600 /opt/slotix/.env.api
+            chmod 600 /opt/sportmap/.env.api
 
       - name: Pull image and restart api
         uses: appleboy/ssh-action@v1
@@ -98,7 +99,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/slotix
+            cd /opt/sportmap
             docker compose -f docker-compose.prod.yml pull api
             docker compose -f docker-compose.prod.yml up -d api
             docker image prune -f
