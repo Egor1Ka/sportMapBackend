@@ -41,15 +41,20 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      # .env.api is managed manually on the server (/opt/sportmap/.env.api).
-      # CI only pulls the fresh image and restarts the api container.
-      - name: Pull image and restart api
+      # The whole backend env lives in a single GitHub secret (ENV_API).
+      # CI writes it to /opt/sportmap/.env.api, then pulls + restarts the api container.
+      - name: Write .env.api, pull image and restart api
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            mkdir -p /opt/sportmap
+            cat > /opt/sportmap/.env.api <<'ENV_API_EOF'
+            ${{ secrets.ENV_API }}
+            ENV_API_EOF
+            chmod 600 /opt/sportmap/.env.api
             cd /opt/sportmap
             docker compose -f docker-compose.prod.yml pull api
             docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate api
