@@ -41,19 +41,61 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      # The whole backend env lives in a single GitHub secret (ENV_API).
-      # CI writes it to /opt/sportmap/.env.api, then pulls + restarts the api container.
       - name: Write .env.api, pull image and restart api
         uses: appleboy/ssh-action@v1
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          DB_URL: ${{ secrets.DB_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ACCESS_TOKEN_EXPIRES: ${{ secrets.ACCESS_TOKEN_EXPIRES }}
+          REFRESH_TOKEN_DAYS: ${{ secrets.REFRESH_TOKEN_DAYS }}
+          COOKIE_SECURE: ${{ secrets.COOKIE_SECURE }}
+          COOKIE_SAME_SITE: ${{ secrets.COOKIE_SAME_SITE }}
+          COOKIE_MAX_AGE_ACCESS_MS: ${{ secrets.COOKIE_MAX_AGE_ACCESS_MS }}
+          COOKIE_MAX_AGE_REFRESH_MS: ${{ secrets.COOKIE_MAX_AGE_REFRESH_MS }}
+          CREEM_SECRET_KEY: ${{ secrets.CREEM_SECRET_KEY }}
+          CREEM_WEBHOOK_SECRET: ${{ secrets.CREEM_WEBHOOK_SECRET }}
+          CREEM_PRODUCT_ID: ${{ secrets.CREEM_PRODUCT_ID }}
+          CREEM_SERVER_IDX: ${{ secrets.CREEM_SERVER_IDX }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          ADMIN_IDS: ${{ secrets.ADMIN_IDS }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: BASE_URL,FRONTEND_URL,DB_URL,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,JWT_SECRET,ACCESS_TOKEN_EXPIRES,REFRESH_TOKEN_DAYS,COOKIE_SECURE,COOKIE_SAME_SITE,COOKIE_MAX_AGE_ACCESS_MS,COOKIE_MAX_AGE_REFRESH_MS,CREEM_SECRET_KEY,CREEM_WEBHOOK_SECRET,CREEM_PRODUCT_ID,CREEM_SERVER_IDX,CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET,ADMIN_IDS
           script: |
             mkdir -p /opt/sportmap
-            cat > /opt/sportmap/.env.api <<'ENV_API_EOF'
-            ${{ secrets.ENV_API }}
-            ENV_API_EOF
+            cat > /opt/sportmap/.env.api <<EOF
+            PORT=9000
+            API_PREFIX=/api
+            BASE_URL=$BASE_URL
+            FRONTEND_URL=$FRONTEND_URL
+            DB_URL=$DB_URL
+            GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+            JWT_SECRET=$JWT_SECRET
+            ACCESS_TOKEN_EXPIRES=$ACCESS_TOKEN_EXPIRES
+            REFRESH_TOKEN_DAYS=$REFRESH_TOKEN_DAYS
+            COOKIE_DOMAIN=
+            COOKIE_SECURE=$COOKIE_SECURE
+            COOKIE_SAME_SITE=$COOKIE_SAME_SITE
+            COOKIE_MAX_AGE_ACCESS_MS=$COOKIE_MAX_AGE_ACCESS_MS
+            COOKIE_MAX_AGE_REFRESH_MS=$COOKIE_MAX_AGE_REFRESH_MS
+            CREEM_SECRET_KEY=$CREEM_SECRET_KEY
+            CREEM_WEBHOOK_SECRET=$CREEM_WEBHOOK_SECRET
+            CREEM_PRODUCT_ID=$CREEM_PRODUCT_ID
+            CREEM_SERVER_IDX=$CREEM_SERVER_IDX
+            CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
+            CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
+            CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
+            ADMIN_IDS=$ADMIN_IDS
+            EOF
             chmod 600 /opt/sportmap/.env.api
             cd /opt/sportmap
             docker compose -f docker-compose.prod.yml pull api
